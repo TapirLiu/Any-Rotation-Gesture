@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<project name="GestureStudyProject" basedir="." default="app">
+   
+   <property file="${basedir}/LocalSettings.properties" />
+   
+   <property name="program.mxmlc"        value="${Path.FlexSDK}/bin/mxmlc" />
+   <property name="output.app"        value="${basedir}/demo.swf" />
+   <property name="path.src"        value="${basedir}/src" />
+   
+   <target name="app">
+      <delete file="${output.app}" quiet="true" />
+   
+      <exec executable="${program.mxmlc}">
+         <arg line="-debug=true"/>
+         
+         <arg line="-locale=en_US" />
+         <arg line="--target-player=10.0.0" />
+         <arg line="-default-background-color 0xCCCCCC"/>
+         <arg line="-default-size 600 600" />
+         <arg line="-source-path=${path.src}" />
+         <arg line="-output=${output.app}"/>
+         
+         <arg line="${path.src}/Main.as" />
+      </exec>
+   </target> 
+   
+</project>
