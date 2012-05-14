@@ -412,7 +412,7 @@ package com.tapirgames.gesture {
 
          if (type == kGestureName_Line)
             result.mGestureAngle = angleFromtStartToend;
-         else if (type == kGestureName_LineZigzag)
+         else if (type == kGestureName_LineZigzag || type == kGestureName_MirrorZigzag)
             result.mGestureAngle =  directionAbsoluteAngle0;
          else if (type == kGestureName_Zigzag)
             result.mGestureAngle = directionAbsoluteAngle1;
