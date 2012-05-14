@@ -14,9 +14,9 @@ package {
    import com.tapirgames.gesture.GesturePoint;
    import com.tapirgames.gesture.GestureSegment;
    
-   public class Main extends Sprite
+   public class Demo extends Sprite
    {
-      public function Main ()
+      public function Demo ()
       {
          addEventListener (Event.ADDED_TO_STAGE , OnAddedToStage);
          
@@ -28,10 +28,6 @@ package {
          
          mLineLayer = new Sprite ();
          addChild (mLineLayer);
-         
-         mBackground.graphics.beginFill(0xD0D0FF);
-         mBackground.graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
-         mBackground.graphics.endFill();
          
          mTextField = new TextField ();
          mTextField.autoSize = TextFieldAutoSize.LEFT;
@@ -65,6 +61,10 @@ package {
       private function OnAddedToStage (event:Event):void 
       {
          stage.frameRate = 100;
+         
+         mBackground.graphics.beginFill(0xD0D0FF);
+         mBackground.graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
+         mBackground.graphics.endFill();
          
          addEventListener (MouseEvent.MOUSE_DOWN, OnMouseDown);
          addEventListener (MouseEvent.MOUSE_MOVE, OnMouseMove);
@@ -112,6 +112,8 @@ package {
             infoString = infoString + "\n-Type: " + result.mGestureType;
             infoString = infoString + "\n-Angle: " + result.mGestureAngle;
             infoString = infoString + "\n-Message: " + result.mAnalyzeMessage;
+            infoString = infoString + "\n-ObbThiness: " + result.mObbThinness;
+            infoString = infoString + "\n-SegmentInfos: " + result.mSegmentInfos;
             
             SetText (infoString);
          }
