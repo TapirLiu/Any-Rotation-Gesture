@@ -11,6 +11,7 @@ package com.tapirgames.gesture {
       public static const kGestureName_LineZigzag:String = "line-zigzag";
       public static const kGestureName_Arrow:String = "arrow";
       public static const kGestureName_Zigzag:String = "zigzag";
+      public static const kGestureName_MirrorZigzag:String = "mirror-zigzag";
       public static const kGestureName_Wave:String = "wave";
       public static const kGestureName_Pool:String = "pool";
       public static const kGestureName_Triangle:String = "triangle";
@@ -370,7 +371,7 @@ package com.tapirgames.gesture {
          
          // use Levenshtein algorithm to judge
             
-         if (mObbWidth / mObbDiagLength < 0.175 && mAllAnglesAreSharp)
+         if (mObbWidth / mObbDiagLength < 0.2 && mAllAnglesAreSharp)
          {
             result = GetFittedGestureType (sThinStandrards);
          }
@@ -399,9 +400,9 @@ package com.tapirgames.gesture {
          //>> mamual adjust
          if (type == kGestureName_Pool && numSegments == 3)
          {
-            if (  (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.18
-               && (mEndSegment.mEndPoint.mAccumulatedLength - mEndSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength > 0.3
-               && mStartSegment.mEndPoint.mAccumulatedLength / mEndPoint.mAccumulatedLength > 0.3
+            if (  (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.2
+               //&& (mEndSegment.mEndPoint.mAccumulatedLength - mEndSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength > 0.3
+               //&& mStartSegment.mEndPoint.mAccumulatedLength / mEndPoint.mAccumulatedLength > 0.3
                && mEndSegment.mAccumulatedAngle < 150)
             {
                result.mGestureType = kGestureName_Arrow;
@@ -590,7 +591,7 @@ package com.tapirgames.gesture {
             //   point = point.mNextPoint;
             //}
             
-trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle);
+//trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle);
             
             segment = segment.mNextSegment;
          }
@@ -742,8 +743,8 @@ trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle 
       private static var sGestureStandard_Arrow3          :Object = NewGestureStandard (kGestureName_Arrow          , true , [35              ], [35                    ], "arrow lower CW");
       private static var sGestureStandard_Arrow3N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-35             ], [-35                   ], "arrow loer CCW");
       
-      private static var sGestureStandard_Zigzag          :Object = NewGestureStandard (kGestureName_Zigzag         , true , [90, -90         ], [90, 0                 ], "zigzag CW");
-      private static var sGestureStandard_ZigzagN         :Object = NewGestureStandard (kGestureName_Zigzag         , false, [-90, 90         ], [-90, 0                ], "zigzag CCW");
+      private static var sGestureStandard_Zigzag          :Object = NewGestureStandard (kGestureName_Zigzag         , true , [90, -90         ], [90, 0                 ], "zigzag");
+      private static var sGestureStandard_MirrorZigzag    :Object = NewGestureStandard (kGestureName_MirrorZigzag   , false, [-90, 90         ], [-90, 0                ], "mirror zigzag");
       private static var sGestureStandard_Wave1           :Object = NewGestureStandard (kGestureName_Wave           , true , [135, -135, 135  ], [135, 0, 135           ], "wave CW");
       private static var sGestureStandard_Wave1N          :Object = NewGestureStandard (kGestureName_Wave           , false, [-135, 135, -135 ], [-135, 0, -135         ], "wave CCW");
       private static var sGestureStandard_Wave2           :Object = NewGestureStandard (kGestureName_Wave           , true , [135, 180, 135   ], [135, 315, 450         ], "wave CW");
@@ -806,7 +807,7 @@ trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle 
       
       private static var sFatNonMonotonicStandrards:Array = [
          sGestureStandard_Zigzag,
-         sGestureStandard_ZigzagN,
+         sGestureStandard_MirrorZigzag,
          sGestureStandard_Wave1,
          sGestureStandard_Wave1N,
       ];
@@ -815,7 +816,7 @@ trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle 
       
       private function FindBestFittedGestureType (standardGestures:Array, deltaAngles:Array, accAngles:Array):Object
       {
-trace ("=========================== errors with standards: ");
+//trace ("=========================== errors with standards: ");
          
          var minError:Number = Number.POSITIVE_INFINITY;
          var bestType:String = null;
@@ -835,7 +836,7 @@ trace ("=========================== errors with standards: ");
                bestTypeIsCW = standard.mIsCW;
             }
             
-trace ("Error to standard '" + standard.mType + "'(" + standard.mInfo + "): delta error: " + deltaError + ", accError: " + accError + ", sumError: " + sumError);
+//trace ("Error to standard '" + standard.mType + "'(" + standard.mInfo + "): delta error: " + deltaError + ", accError: " + accError + ", sumError: " + sumError);
          }
          
          return NewAnalyzeResult (bestType, 0, "fitted with standard", bestTypeIsCW); // angle is temp
