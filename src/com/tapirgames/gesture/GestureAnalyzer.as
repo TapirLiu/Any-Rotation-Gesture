@@ -39,7 +39,7 @@ package com.tapirgames.gesture {
       
       private var mPointDistances:Array;
       
-      private static const kLengthToAccLengthRatioToFindSegment :Number = Math.cos (20.0 * Math.PI / 180.0); // 0.94; // 0.94 is about cos (20 degrees)
+      private static const kLengthToAccLengthRatioToFindSegment :Number = Math.cos (20.0 * Math.PI / 180.0);
 
    //===================================================
 
@@ -137,10 +137,10 @@ package com.tapirgames.gesture {
 
          if (newPoint.mX < mMinX)
             mMinX = newPoint.mX;
-         if (newPoint.mY < mMinY)
-            mMinY = newPoint.mY;
          if (newPoint.mX > mMaxX)
             mMaxX = newPoint.mX;
+         if (newPoint.mY < mMinY)
+            mMinY = newPoint.mY;
          if (newPoint.mY > mMaxY)
             mMaxY = newPoint.mY;
          
@@ -156,7 +156,7 @@ package com.tapirgames.gesture {
       
       private static function GetAbsoluteAngle (dx:Number, dy:Number):Number
       {
-         return (Math.atan2 (dy, dx) * kRadiansToDegrees + 360) % 360
+         return (Math.atan2 (dy, dx) * kRadiansToDegrees + 360) % 360;
       }
       
       private static function GetDeltaRotation (dx1:Number, dy1:Number, dx2:Number, dy2:Number):Number
@@ -339,7 +339,7 @@ package com.tapirgames.gesture {
                return NewAnalyzeResult (kGestureName_LongPress, 0, "one small closed segment");
          }
          
-         var angleFromtStartToend:Number = GetAbsoluteAngle (mEndPoint.mX - mStartPoint.mX, mEndPoint.mY - mStartPoint.mY);
+         var angleFromtStartToEnd:Number = GetAbsoluteAngle (mEndPoint.mX - mStartPoint.mX, mEndPoint.mY - mStartPoint.mY);
          var startSegmentAbsoluteAngle:Number = GetAbsoluteAngle (mStartSegment.mDx, mStartSegment.mDy);
          var endSegmentAbsoluteAngle:Number = GetAbsoluteAngle (mEndSegment.mDx, mEndSegment.mDy);
          var directionAbsoluteAngle0:Number = mStartSegment.mNextSegment == null ? startSegmentAbsoluteAngle : GetAngleAverage (startSegmentAbsoluteAngle, GetAbsoluteAngle (mStartSegment.mNextSegment.mDx, mStartSegment.mNextSegment.mDy) + 180);
@@ -354,16 +354,28 @@ package com.tapirgames.gesture {
          var numSegments:int = mEndSegment.mIndex + 1;
          
          if (numSegments == 1)
-            return NewAnalyzeResult (kGestureName_Line, GetAbsoluteAngle (mStartSegment.mDx, mStartSegment.mDy), "numSegments == 1");
-         
-         if (numSegments == 2)
          {
+            return NewAnalyzeResult (kGestureName_Line, GetAbsoluteAngle (mStartSegment.mDx, mStartSegment.mDy), "numSegments == 1");
+         }
+         else if (numSegments == 2)
+         {
+            // mEndSegment must not be null
+            if (mEndSegment.mStartEndDistance < 0.2 * mStartSegment.mStartEndDistance || mStartSegment.mStartEndDistance < 0.2 * mEndSegment.mStartEndDistance)
+            {
+               // the shorter one will be ignored
+               if (mStartSegment.mStartEndDistance > mEndSegment.mStartEndDistance)
+                  return NewAnalyzeResult (kGestureName_Line, startSegmentAbsoluteAngle, "numSegments == 2 (>)", mNumPositiveDeltaAngleSegments > 0);
+               else
+                  return NewAnalyzeResult (kGestureName_Line, endSegmentAbsoluteAngle, "numSegments == 2 (<)", mNumPositiveDeltaAngleSegments > 0);
+               
+               //return;
+            }
+            
             var absIncludeAngle:Number = Math.abs (mEndSegment.mDeltaAngle);
             
             if (absIncludeAngle < 35)
-               return NewAnalyzeResult (kGestureName_Line, GetAbsoluteAngle (mStartSegment.mDx, mStartSegment.mDy), "numSegments == 2", mNumPositiveDeltaAngleSegments > 0);
-            
-            if (absIncludeAngle > 165)
+               return NewAnalyzeResult (kGestureName_Line, angleFromtStartToEnd, "numSegments == 2 (=)", mNumPositiveDeltaAngleSegments > 0);
+            else if (absIncludeAngle > 165)
                return NewAnalyzeResult (kGestureName_LineArrow, directionAbsoluteAngle0, "numSegments == 2", mNumPositiveDeltaAngleSegments > 0);
             
             return NewAnalyzeResult (kGestureName_Arrow, directionAbsoluteAngle2, "numSegments == 2", mNumPositiveDeltaAngleSegments > 0);
@@ -388,37 +400,43 @@ package com.tapirgames.gesture {
          
          var type:String = result.mGestureType;
          
-         //>> mamual adjust
-         if (type == kGestureName_Triangle && numSegments == 3)
+         //>> mamual adjustments
+         if (numSegments == 3)
          {
-            if (  (mStartSegment.mEndPoint.mAccumulatedLength + mEndSegment.mEndPoint.mAccumulatedLength - mEndSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.5
-               && GetPointDistance (mStartPoint, mEndPoint) / (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) > 0.67)
+            if (type == kGestureName_Triangle)
             {
-               result.mGestureType = kGestureName_Pool;
+               if (  (mStartSegment.mEndPoint.mAccumulatedLength + mEndSegment.mEndPoint.mAccumulatedLength - mEndSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.5
+                  && GetPointDistance (mStartPoint, mEndPoint) / (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) > 0.67)
+               {
+                  result.mGestureType = kGestureName_Pool;
+               }
             }
-         }
-         //>> mamual adjust
-         if (type == kGestureName_Pool && numSegments == 3)
-         {
-            if (  (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.2
-               //&& (mEndSegment.mEndPoint.mAccumulatedLength - mEndSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength > 0.3
-               //&& mStartSegment.mEndPoint.mAccumulatedLength / mEndPoint.mAccumulatedLength > 0.3
-               && mEndSegment.mAccumulatedAngle < 150)
+            if (type == kGestureName_Pool)
             {
-               result.mGestureType = kGestureName_Arrow;
+               if (  (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.2
+                  //&& (mEndSegment.mEndPoint.mAccumulatedLength - mEndSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength > 0.3
+                  //&& mStartSegment.mEndPoint.mAccumulatedLength / mEndPoint.mAccumulatedLength > 0.3
+                  && mEndSegment.mAccumulatedAngle < 150)
+               {
+                  result.mGestureType = kGestureName_Arrow;
+               }
             }
          }
          //<<
 
          if (type == kGestureName_Line)
-            result.mGestureAngle = angleFromtStartToend;
+            result.mGestureAngle = angleFromtStartToEnd;
          else if (type == kGestureName_LineZigzag || type == kGestureName_MirrorZigzag)
             result.mGestureAngle =  directionAbsoluteAngle0;
          else if (type == kGestureName_Zigzag)
             result.mGestureAngle = directionAbsoluteAngle1;
-         else if (  type == kGestureName_Arrow || type == kGestureName_LineArrow || type == kGestureName_Wave || type == kGestureName_Pool 
-                 || type == kGestureName_Triangle || type == kGestureName_Circle || type == kGestureName_FivePointStar)
+         else if (type == kGestureName_Arrow || type == kGestureName_LineArrow || type == kGestureName_Triangle || type == kGestureName_Circle || type == kGestureName_FivePointStar)
             result.mGestureAngle = directionAbsoluteAngle2;
+         else if (type == kGestureName_Wave || type == kGestureName_Pool)
+         {
+            result.mGestureAngle = directionAbsoluteAngle2;
+            // todo: special handling
+         }
          else
             result.mGestureAngle = 0; //NaN;
          
@@ -554,7 +572,7 @@ package com.tapirgames.gesture {
 
             segment.mDx = segment.mEndPoint.mX - segment.mStartPoint.mX;
             segment.mDy = segment.mEndPoint.mY - segment.mStartPoint.mY;
-            //segment.mStartEndDistance = GetPointDistance (segment.mStartPoint, segment.mEndPoint);
+            segment.mStartEndDistance = GetPointDistance (segment.mStartPoint, segment.mEndPoint);
             //segment.mAccumulatedLength = segment.mEndPoint.mAccumulatedLength - segment.mStartPoint.mAccumulatedLength;
             //segment.mStartEndDistanceToAccumulatedLengthRatio = segment.mStarEndDistance / segment.mAccumulatedLength;
             
@@ -591,7 +609,7 @@ package com.tapirgames.gesture {
             //   point = point.mNextPoint;
             //}
             
-//trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle);
+//trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle + ", distance: " + GetPointDistance (segment.mStartPoint, segment.mEndPoint)  + ", acc length: " + (segment.mEndPoint.mAccumulatedLength - segment.mStartPoint.mAccumulatedLength));
             
             segment = segment.mNextSegment;
          }
@@ -738,8 +756,8 @@ package com.tapirgames.gesture {
       
       private static var sGestureStandard_Arrow1          :Object = NewGestureStandard (kGestureName_Arrow          , true , [150             ], [150                   ], "arrow upper CW");
       private static var sGestureStandard_Arrow1N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-150            ], [-150                  ], "arrow upper CCW");
-      //private static var sGestureStandard_Arrow2         :Object = NewGestureStandard (kGestureName_Arrow          , true , [90             ], [90                    ], "arrow CW");
-      //private static var sGestureStandard_Arrow2N        :Object = NewGestureStandard (kGestureName_Arrow          , false, [-90            ], [-90                   ], "arrow CCW");
+      //private static var sGestureStandard_Arrow2         :Object = NewGestureStandard (kGestureName_Arrow         , true , [90              ], [90                    ], "arrow CW");
+      //private static var sGestureStandard_Arrow2N        :Object = NewGestureStandard (kGestureName_Arrow         , false, [-90             ], [-90                   ], "arrow CCW");
       private static var sGestureStandard_Arrow3          :Object = NewGestureStandard (kGestureName_Arrow          , true , [35              ], [35                    ], "arrow lower CW");
       private static var sGestureStandard_Arrow3N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-35             ], [-35                   ], "arrow loer CCW");
       

@@ -12,7 +12,7 @@ package com.tapirgames.gesture {
 
       public var mDx:Number;
       public var mDy:Number;
-      //public var mStartEndDistance:Number;
+      public var mStartEndDistance:Number;
       //public var mAccumulatedLength:Number;
       //public var mStartEndDistanceToAccumulatedLengthRatio:Number;
       

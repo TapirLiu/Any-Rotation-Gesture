@@ -1,16 +1,28 @@
 <?xml version="1.0"?>
 <project name="GestureStudyProject" basedir="." default="app">
    
-   <property file="${basedir}/LocalSettings.properties" />
+   <condition property="file.local.settings" value="LocalSettings.properties.Windows" else="LocalSettings.properties.Linux">
+      <os family="windows" />
+   </condition>
+   <property file="${basedir}/${file.local.settings}" />
    
-   <property name="program.mxmlc"        value="${Path.FlexSDK}/bin/mxmlc" />
+   <property name="dir.flexsdk"        value="${Path.FlexSDK}" />
+
+   <!-- -DForAir=true -->
+   <condition property="program.as3compiler.nosuffix" value="${dir.flexsdk}/bin/amxmlc" else="${dir.flexsdk}/bin/mxmlc">
+      <isset property="ForAir"/>
+   </condition>
+   <condition property="program.as3compiler" value="${program.as3compiler.nosuffix}.exe" else="${program.as3compiler.nosuffix}">
+      <os family="windows" />
+   </condition>
+   
    <property name="output.app"        value="${basedir}/demo.swf" />
    <property name="path.src"        value="${basedir}/src" />
    
    <target name="app">
       <delete file="${output.app}" quiet="true" />
    
-      <exec executable="${program.mxmlc}">
+      <exec executable="${program.as3compiler}">
          <arg line="-debug=true"/>
          
          <arg line="-locale=en_US" />

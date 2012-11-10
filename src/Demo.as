@@ -112,7 +112,7 @@ package {
             infoString = infoString + "\n-Type: " + result.mGestureType;
             infoString = infoString + "\n-Angle: " + result.mGestureAngle;
             infoString = infoString + "\n-Message: " + result.mAnalyzeMessage;
-            infoString = infoString + "\n-ObbThiness: " + result.mObbThinness;
+            infoString = infoString + "\n-ObbThickness: " + result.mObbThinness;
             infoString = infoString + "\n-SegmentInfos: " + result.mSegmentInfos;
             
             SetText (infoString);
