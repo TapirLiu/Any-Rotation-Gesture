@@ -103,7 +103,7 @@ package {
       {
          if (mGestureAnalyzer != null)
          {
-            RegisterGesturePoint (mGestureAnalyzer, event.stageX, event.stageY);
+            //RegisterGesturePoint (mGestureAnalyzer, event.stageX, event.stageY); // the release point is often a bad point
 
             var result:Object = mGestureAnalyzer.Analyze ();
             
