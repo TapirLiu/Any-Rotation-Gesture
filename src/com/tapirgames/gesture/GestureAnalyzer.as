@@ -18,9 +18,11 @@ package com.tapirgames.gesture {
       public static const kGestureName_Circle:String = "circle";
       public static const kGestureName_FivePointStar:String = "five-point-star";
       
+      public static const kLongPress_DurationThreshold:Number = 1000; // ms
+      
    //===================================================
 
-      public function GestureAnalyzer (minGestureSize:Number, minPointDistance:Number, minTimerInterval:Number = 10.0, maxTimeDuration:Number = 2000.0, maxPointCount:int = 500):void
+      public function GestureAnalyzer (minGestureSize:Number, minPointDistance:Number, minTimerInterval:Number = 10.0, maxTimeDuration:Number = 5000.0, maxPointCount:int = 500):void
       {
          mMinAllowedGestureSize = minGestureSize;
          mMinAllowedPointDistance = minPointDistance;
@@ -63,6 +65,15 @@ package com.tapirgames.gesture {
       private var mSumXX:Number = 0;
       private var mSumYY:Number = 0;
       private var mSumXY:Number = 0;
+      
+      // if Long_Pressed is not important, this function need not to be called.
+      public function Finish (endTime:Number):void
+      {
+         if (mStartPoint != null)
+         {
+            mEndTime = endTime;
+         }
+      }
       
       public function RegisterPoint (newPointX:Number, newPointY:Number, time:Number):GesturePoint
       {
@@ -115,6 +126,7 @@ package com.tapirgames.gesture {
 
             var distanceValueIndex:int = newPoint.mDistanceValuesFromIndex;
             var aPoint:GesturePoint = mStartPoint;
+            
             while (aPoint != newPoint)
             {
                dx = aPoint.mX - newPoint.mX;
@@ -126,6 +138,7 @@ package com.tapirgames.gesture {
                aPoint = aPoint.mNextPoint;
             }
          }
+//trace (">> new point: " + newPoint.mX + ", " + newPoint.mY);
 
          // ...
          
@@ -193,10 +206,14 @@ package com.tapirgames.gesture {
          var diffIndex:int = pointB.mIndex - pointA.mIndex;
          
          if (pointA.mIndex < pointB.mIndex)
+         {
             return mPointDistances [pointB.mDistanceValuesFromIndex + pointA.mIndex];
+         }
          
          if (pointA.mIndex > pointB.mIndex)
+         {
             return mPointDistances [pointA.mDistanceValuesFromIndex + pointB.mIndex];
+         }
          
          return 0;
       }
@@ -212,6 +229,8 @@ package com.tapirgames.gesture {
       
       private function NewAnalyzeResult (type:String, angle:Number, message:String, isCW:Boolean = true):Object
       {
+         // Generally, DON'T change the names, they are used in the old player.World plugins!!!
+         // If they are really needed to change, some modifications needs to be done before Viewer calling mWorldDesignProperties.RegisterGestureEvent to keep compatibility.
          return {
                    mGestureType: type, // the name "mGestureType" is also used at the end of Analyze
                    mGestureAngle: angle, // the name of "mGestureAngle" is also used at the end of Analyze
@@ -229,10 +248,12 @@ package com.tapirgames.gesture {
 //trace ("mEndTime = " + mEndTime + ", mStartTime = " + mStartTime);
          if (mStartPoint == mEndPoint) // 0 or 1 point
          {
-            if (mEndPoint == null || mEndTime - mStartTime < 2000)
+            if (mStartPoint == null || mEndTime - mStartTime < kLongPress_DurationThreshold) // 0 point or time span is too short
                return NewAnalyzeResult (null, 0, "too few points");
             else
                return NewAnalyzeResult (kGestureName_LongPress, 0, "one point");
+                     // here, the LongPress is LongPressFinisehd.
+                     // A LongPressStarted and a LongPressing event need to be added later.
          }
 
          // aabb box
@@ -244,7 +265,7 @@ package com.tapirgames.gesture {
 
          if (mAabbSize < mMinAllowedGestureSize)
          { 
-            if (mEndPoint == null || mEndTime - mStartTime < 2000)
+            if (mEndTime - mStartTime < kLongPress_DurationThreshold)
                 return NewAnalyzeResult (null, 0, "too small");
             else
                return NewAnalyzeResult (kGestureName_LongPress, 0, "small area");
@@ -382,6 +403,8 @@ package com.tapirgames.gesture {
          }
          
          // use Levenshtein algorithm to judge
+         
+//trace ("&&&&&&&&&&&&&&&&&&&&&&&&&& mObbWidth = " + mObbWidth + ", mObbDiagLength = " + mObbDiagLength + ", mObbWidth / mObbDiagLength = " + (mObbWidth / mObbDiagLength) + ", mAllAnglesAreSharp = " + mAllAnglesAreSharp);
             
          if (mObbWidth / mObbDiagLength < 0.2 && mAllAnglesAreSharp)
          {
@@ -492,6 +515,8 @@ package com.tapirgames.gesture {
          var prevSegment:GestureSegment = null;
          var segment:GestureSegment;
          
+         
+//trace ("============================================ start FindAllSegments");
          while (startPoint != mEndPoint)
          {
             segment = FindSegmentFromPoint (startPoint, minSegmentLength, prevSegment);
@@ -592,8 +617,12 @@ package com.tapirgames.gesture {
                   ++ mNumPositiveDeltaAngleSegments;
                if (segment.mDeltaAngle < -5)
                   ++ mNumNegativeDeltaAngleSegments;
-               if (Math.abs (segment.mDeltaAngle) < 160)
+               //if (Math.abs (segment.mDeltaAngle) < 160)
+               if (Math.abs (segment.mDeltaAngle) < 160 && Math.abs (segment.mDeltaAngle) > 20)
+               {
+//trace ("&&&&&&&&&&&&&& mAllAnglesAreSharp = false, segment.mDeltaAngle = " + segment.mDeltaAngle);
                   mAllAnglesAreSharp = false;
+               }
             }
             
             //startPoint = segment.mStartPoint;
@@ -609,7 +638,7 @@ package com.tapirgames.gesture {
             //   point = point.mNextPoint;
             //}
             
-//trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle + ", distance: " + GetPointDistance (segment.mStartPoint, segment.mEndPoint)  + ", acc length: " + (segment.mEndPoint.mAccumulatedLength - segment.mStartPoint.mAccumulatedLength));
+//trace (">> segment@" + segment.mIndex + "> delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle + ", dx: " + segment.mDx + ", dy: " + segment.mDy + ", distance: " + GetPointDistance (segment.mStartPoint, segment.mEndPoint)  + ", acc length: " + (segment.mEndPoint.mAccumulatedLength - segment.mStartPoint.mAccumulatedLength));
             
             segment = segment.mNextSegment;
          }
@@ -624,15 +653,19 @@ package com.tapirgames.gesture {
          var firstPointAfterMinSegmentLength:GesturePoint = null;
          var kneePoint:GesturePoint;
          
+//trace (">> FindSegmentFromPoint, startPoint.mIndex = " + startPoint.mIndex + ", kLengthToAccLengthRatioToFindSegment = " + kLengthToAccLengthRatioToFindSegment);
          while (true)
          {
             gesturePoint = gesturePoint.mNextPoint;
             
             var diffAccLength:Number = gesturePoint.mAccumulatedLength - startPoint.mAccumulatedLength;
+            
+//trace ("       diffAccLength = " + diffAccLength + ", GetPointDistance (gesturePoint.mPrevPoint, gesturePoint) = " + GetPointDistance (gesturePoint.mPrevPoint, gesturePoint));
             if (diffAccLength >= minSegmentLength)
             {
                //if (firstPointAfterMinSegmentLength != null)
                //{
+//trace ("    gesturePoint.mIndex = " + gesturePoint.mIndex + ", GetPointDistance (startPoint, gesturePoint) / diffAccLength = " + GetPointDistance (startPoint, gesturePoint) + " / " + diffAccLength + " = " + (GetPointDistance (startPoint, gesturePoint) / diffAccLength));
                   if (GetPointDistance (startPoint, gesturePoint) / diffAccLength < kLengthToAccLengthRatioToFindSegment)
                   {
                      kneePoint = FindKneePointBetweenTwoPoints (startPoint, gesturePoint); //, firstPointAfterMinSegmentLength); // should be not null
@@ -713,11 +746,11 @@ package com.tapirgames.gesture {
       /*
       private function TraceSegments (title:String):void
       {
-         trace ("=================================== segments: " + title);
+trace ("=================================== segments: " + title);
          var segment:GestureSegment = mStartSegment;
          while (segment != null)
          {
-            trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end index: " + segment.mEndPoint.mIndex
+trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end index: " + segment.mEndPoint.mIndex
                      + ", dx: " + segment.mDx + ", dy: " + segment.mDy
                    //  + ", accLength: " + segment.mAccumulatedLength + ", distance: " + segment.mStarEndDistance
                      + ", delta angle: " + segment.mDeltaAngle + ", acc angle: " + segment.mAccumulatedAngle
@@ -756,8 +789,8 @@ package com.tapirgames.gesture {
       
       private static var sGestureStandard_Arrow1          :Object = NewGestureStandard (kGestureName_Arrow          , true , [150             ], [150                   ], "arrow upper CW");
       private static var sGestureStandard_Arrow1N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-150            ], [-150                  ], "arrow upper CCW");
-      //private static var sGestureStandard_Arrow2         :Object = NewGestureStandard (kGestureName_Arrow         , true , [90              ], [90                    ], "arrow CW");
-      //private static var sGestureStandard_Arrow2N        :Object = NewGestureStandard (kGestureName_Arrow         , false, [-90             ], [-90                   ], "arrow CCW");
+      //private static var sGestureStandard_Arrow2        :Object = NewGestureStandard (kGestureName_Arrow          , true , [90              ], [90                    ], "arrow CW");
+      //private static var sGestureStandard_Arrow2N       :Object = NewGestureStandard (kGestureName_Arrow          , false, [-90             ], [-90                   ], "arrow CCW");
       private static var sGestureStandard_Arrow3          :Object = NewGestureStandard (kGestureName_Arrow          , true , [35              ], [35                    ], "arrow lower CW");
       private static var sGestureStandard_Arrow3N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-35             ], [-35                   ], "arrow loer CCW");
       
@@ -856,12 +889,13 @@ package com.tapirgames.gesture {
             
 //trace ("Error to standard '" + standard.mType + "'(" + standard.mInfo + "): delta error: " + deltaError + ", accError: " + accError + ", sumError: " + sumError);
          }
+//trace ("********** the best type is: " + bestType);
          
          return NewAnalyzeResult (bestType, 0, "fitted with standard", bestTypeIsCW); // angle is temp
       }
       
       private static var mErrorsTable:Array = null;
-      private function ComputeGestureDataError (standardData:Array, realData:Array, DiffFunc:Function):Number
+      private function ComputeGestureDataError (standardData:Array, realData:Array, CostFunc:Function):Number
       {
          if (standardData == null || realData == null || standardData.length == 0 || realData.length == 0)
             return 0x7FFFFFFF;
@@ -894,7 +928,7 @@ package com.tapirgames.gesture {
             {
                error = Math.min (mErrorsTable [i - 1], mErrorsTable [i - numCols]);
                error = Math.min (mErrorsTable [i - 1 - numCols], error);
-               mErrorsTable [i] = error + DiffFunc (standardData [row], realData [col]);
+               mErrorsTable [i] = error + CostFunc (standardData [row], realData [col]);
             }
          }
          
@@ -904,7 +938,7 @@ package com.tapirgames.gesture {
       private static function AngleDiffWithTranc (standardValue:Number, realValue:Number):Number
       {
          var diff:Number = Math.abs (realValue - standardValue);
-         if (diff > 5000)
+         if (diff > 5000) // ? why? forget. Maybe a mistake.
             return diff;
          
          if (diff >= 360)
