@@ -434,6 +434,7 @@ package com.tapirgames.gesture {
                   result.mGestureType = kGestureName_Pool;
                }
             }
+            
             if (type == kGestureName_Pool)
             {
                if (  (mStartSegment.mNextSegment.mEndPoint.mAccumulatedLength - mStartSegment.mNextSegment.mStartPoint.mAccumulatedLength) / mEndPoint.mAccumulatedLength < 0.2
@@ -449,24 +450,39 @@ package com.tapirgames.gesture {
 
          if (type == kGestureName_Line)
             result.mGestureAngle = angleFromtStartToEnd;
-         else if (type == kGestureName_LineZigzag || type == kGestureName_MirrorZigzag)
+         else if (type == kGestureName_LineZigzag)
+         {
             result.mGestureAngle =  directionAbsoluteAngle0;
+            // todo: special handling: use obbCenter - startPoint instead
+         }
          else if (type == kGestureName_Zigzag)
+         {
             result.mGestureAngle = directionAbsoluteAngle1;
-         else if (type == kGestureName_Arrow || type == kGestureName_LineArrow || type == kGestureName_Triangle || type == kGestureName_Circle || type == kGestureName_FivePointStar)
-            result.mGestureAngle = directionAbsoluteAngle2;
+            // todo: special handling: check the point breaks monotonic, ...
+         }
+         else if (type == kGestureName_MirrorZigzag)
+         {
+            result.mGestureAngle = directionAbsoluteAngle1;
+            // todo: special handling: check the point breaks monotonic, ...
+         }
          else if (type == kGestureName_Wave || type == kGestureName_Pool)
          {
             result.mGestureAngle = directionAbsoluteAngle2;
-            // todo: special handling
+            // todo: special handling: check the point breaks monotonic, ...
          }
-         else
+         else if (type == kGestureName_Arrow || type == kGestureName_LineArrow) // || type == kGestureName_Triangle || type == kGestureName_Circle || type == kGestureName_FivePointStar)
+         {
+            result.mGestureAngle = directionAbsoluteAngle2;
+         }
+         else // for triangle/circle/five_point_star/long_press, angle is meanless
+         {
             result.mGestureAngle = 0; //NaN;
+         }
          
          // more debug info
          
-         result.mObbThinness = mObbWidth / mObbDiagLength;
-         result.mSegmentInfos = "+" + mNumPositiveDeltaAngleSegments + " / -" + mNumNegativeDeltaAngleSegments + " / " + mAllAnglesAreSharp;
+         //result.mObbThinness = mObbWidth / mObbDiagLength;
+         //result.mSegmentInfos = "+" + mNumPositiveDeltaAngleSegments + " / -" + mNumNegativeDeltaAngleSegments + " / " + mAllAnglesAreSharp;
          
          // ...
          
@@ -779,44 +795,44 @@ trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end 
          return standard;
       }
       
-      private static var sGestureStandard_Line1           :Object = NewGestureStandard (kGestureName_Line           , true , [0               ], [0                     ], "line lower");
-      private static var sGestureStandard_Line2           :Object = NewGestureStandard (kGestureName_Line           , true , [30              ], [30                    ], "line upper CW");
-      private static var sGestureStandard_Line2N          :Object = NewGestureStandard (kGestureName_Line           , false, [-30             ], [-30                   ], "line upper CCW");
-      private static var sGestureStandard_LineArrow       :Object = NewGestureStandard (kGestureName_LineArrow      , true , [165             ], [165                   ], "line arrow CW");
-      private static var sGestureStandard_LineArrowN      :Object = NewGestureStandard (kGestureName_LineArrow      , false, [-165            ], [-165                  ], "line arrow CCW");
-      private static var sGestureStandard_LineZigzag      :Object = NewGestureStandard (kGestureName_LineZigzag     , true , [180             ], [180, 0                ], "line zigzag"              , true);
-      private static var sGestureStandard_LineZigzag2     :Object = NewGestureStandard (kGestureName_LineZigzag     , true , [180             ], [180, 0, 180           ], "line zigzag 2"            , true);
+      private static const sGestureStandard_Line1           :Object = NewGestureStandard (kGestureName_Line           , true , [0               ], [0                     ], "line lower");
+      private static const sGestureStandard_Line2           :Object = NewGestureStandard (kGestureName_Line           , true , [30              ], [30                    ], "line upper CW");
+      private static const sGestureStandard_Line2N          :Object = NewGestureStandard (kGestureName_Line           , false, [-30             ], [-30                   ], "line upper CCW");
+      private static const sGestureStandard_LineArrow       :Object = NewGestureStandard (kGestureName_LineArrow      , true , [165             ], [165                   ], "line arrow CW");
+      private static const sGestureStandard_LineArrowN      :Object = NewGestureStandard (kGestureName_LineArrow      , false, [-165            ], [-165                  ], "line arrow CCW");
+      private static const sGestureStandard_LineZigzag      :Object = NewGestureStandard (kGestureName_LineZigzag     , true , [180             ], [180, 0                ], "line zigzag"              , true);
+      private static const sGestureStandard_LineZigzag2     :Object = NewGestureStandard (kGestureName_LineZigzag     , true , [180             ], [180, 0, 180           ], "line zigzag 2"            , true);
       
-      private static var sGestureStandard_Arrow1          :Object = NewGestureStandard (kGestureName_Arrow          , true , [150             ], [150                   ], "arrow upper CW");
-      private static var sGestureStandard_Arrow1N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-150            ], [-150                  ], "arrow upper CCW");
-      //private static var sGestureStandard_Arrow2        :Object = NewGestureStandard (kGestureName_Arrow          , true , [90              ], [90                    ], "arrow CW");
-      //private static var sGestureStandard_Arrow2N       :Object = NewGestureStandard (kGestureName_Arrow          , false, [-90             ], [-90                   ], "arrow CCW");
-      private static var sGestureStandard_Arrow3          :Object = NewGestureStandard (kGestureName_Arrow          , true , [35              ], [35                    ], "arrow lower CW");
-      private static var sGestureStandard_Arrow3N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-35             ], [-35                   ], "arrow loer CCW");
+      private static const sGestureStandard_Arrow1          :Object = NewGestureStandard (kGestureName_Arrow          , true , [150             ], [150                   ], "arrow upper CW");
+      private static const sGestureStandard_Arrow1N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-150            ], [-150                  ], "arrow upper CCW");
+      //private static const sGestureStandard_Arrow2        :Object = NewGestureStandard (kGestureName_Arrow          , true , [90              ], [90                    ], "arrow CW");
+      //private static const sGestureStandard_Arrow2N       :Object = NewGestureStandard (kGestureName_Arrow          , false, [-90             ], [-90                   ], "arrow CCW");
+      private static const sGestureStandard_Arrow3          :Object = NewGestureStandard (kGestureName_Arrow          , true , [36              ], [36                    ], "arrow lower CW");
+      private static const sGestureStandard_Arrow3N         :Object = NewGestureStandard (kGestureName_Arrow          , false, [-36             ], [-36                   ], "arrow loer CCW");
       
-      private static var sGestureStandard_Zigzag          :Object = NewGestureStandard (kGestureName_Zigzag         , true , [90, -90         ], [90, 0                 ], "zigzag");
-      private static var sGestureStandard_MirrorZigzag    :Object = NewGestureStandard (kGestureName_MirrorZigzag   , false, [-90, 90         ], [-90, 0                ], "mirror zigzag");
-      private static var sGestureStandard_Wave1           :Object = NewGestureStandard (kGestureName_Wave           , true , [135, -135, 135  ], [135, 0, 135           ], "wave CW");
-      private static var sGestureStandard_Wave1N          :Object = NewGestureStandard (kGestureName_Wave           , false, [-135, 135, -135 ], [-135, 0, -135         ], "wave CCW");
-      private static var sGestureStandard_Wave2           :Object = NewGestureStandard (kGestureName_Wave           , true , [135, 180, 135   ], [135, 315, 450         ], "wave CW");
-      private static var sGestureStandard_Wave2N          :Object = NewGestureStandard (kGestureName_Wave           , false, [-135, -180, -135], [-135, -315, -450      ], "wave CCW");
+      private static const sGestureStandard_Zigzag          :Object = NewGestureStandard (kGestureName_Zigzag         , true , [90, -90         ], [90, 0                 ], "zigzag");
+      private static const sGestureStandard_MirrorZigzag    :Object = NewGestureStandard (kGestureName_MirrorZigzag   , false, [-90, 90         ], [-90, 0                ], "mirror zigzag");
+      private static const sGestureStandard_Wave1           :Object = NewGestureStandard (kGestureName_Wave           , true , [136, -136, 136  ], [136, 0, 136           ], "wave CW");
+      private static const sGestureStandard_Wave1N          :Object = NewGestureStandard (kGestureName_Wave           , false, [-136, 136, -136 ], [-136, 0, -136         ], "wave CCW");
+      private static const sGestureStandard_Wave2           :Object = NewGestureStandard (kGestureName_Wave           , true , [136, 180, 136   ], [136, 316, 452         ], "wave CW");
+      private static const sGestureStandard_Wave2N          :Object = NewGestureStandard (kGestureName_Wave           , false, [-136, -180, -136], [-136, -316, -452      ], "wave CCW");
       
-      private static var sGestureStandard_Pool1           :Object = NewGestureStandard (kGestureName_Pool           , true , [90, 90          ], [90, 200               ], "Pool CW");
-      private static var sGestureStandard_Pool1N          :Object = NewGestureStandard (kGestureName_Pool           , false, [-90, -90        ], [-90, -200             ], "Pool CCW");
-      private static var sGestureStandard_Pool2           :Object = NewGestureStandard (kGestureName_Pool           , true , [45, 45          ], [45, 90                ], "Pool CW");
-      private static var sGestureStandard_Pool2N          :Object = NewGestureStandard (kGestureName_Pool           , false, [-45, -45        ], [-45, -90              ], "Pool CCW");
-      private static var sGestureStandard_Triangle1       :Object = NewGestureStandard (kGestureName_Triangle       , true , [120, 120        ], [120, 250              ], "triangle CW 1");
-      private static var sGestureStandard_Triangle1N      :Object = NewGestureStandard (kGestureName_Triangle       , false, [-120, -120      ], [-120, -250            ], "triangle CCW 1");
-      private static var sGestureStandard_Triangle2       :Object = NewGestureStandard (kGestureName_Triangle       , true , [150, 90         ], [150, 250              ], "triangle CW 2");
-      private static var sGestureStandard_Triangle2N      :Object = NewGestureStandard (kGestureName_Triangle       , false, [-150, -90       ], [-150, -250            ], "triangle CCW 2");
-      private static var sGestureStandard_Triangle3       :Object = NewGestureStandard (kGestureName_Triangle       , true , [70, 150         ], [70, 250               ], "triangle CW 3");
-      private static var sGestureStandard_Triangle3N      :Object = NewGestureStandard (kGestureName_Triangle       , false, [-70, -150       ], [-70, -250             ], "triangle CCW 3");
-      private static var sGestureStandard_Circle1         :Object = NewGestureStandard (kGestureName_Circle         , true , [75              ], [75, 150, 225, 300     ], "circle CW 1");
-      private static var sGestureStandard_Circle1N        :Object = NewGestureStandard (kGestureName_Circle         , false, [-75             ], [-75, -150, -225, -300 ], "circle CCW 1");
-      private static var sGestureStandard_Circle2         :Object = NewGestureStandard (kGestureName_Circle         , true , [100             ], [100, 200, 300         ], "circle CW 2");
-      private static var sGestureStandard_Circle2N        :Object = NewGestureStandard (kGestureName_Circle         , false, [-100            ], [-100, -200, -300      ], "circle CCW 2");
-      private static var sGestureStandard_FivePointStar   :Object = NewGestureStandard (kGestureName_FivePointStar  , true , [144             ], [144, 288, 432, 576    ], "five-pointed star CW");
-      private static var sGestureStandard_FivePointStarN  :Object = NewGestureStandard (kGestureName_FivePointStar  , false, [-144            ], [-144, -288, -432, -576], "five-pointed star CCW");
+      private static const sGestureStandard_Pool1           :Object = NewGestureStandard (kGestureName_Pool           , true , [90, 90          ], [90, 180               ], "Pool CW");
+      private static const sGestureStandard_Pool1N          :Object = NewGestureStandard (kGestureName_Pool           , false, [-90, -90        ], [-90, -180             ], "Pool CCW");
+      private static const sGestureStandard_Pool2           :Object = NewGestureStandard (kGestureName_Pool           , true , [45, 45          ], [45, 90                ], "Pool CW");
+      private static const sGestureStandard_Pool2N          :Object = NewGestureStandard (kGestureName_Pool           , false, [-45, -45        ], [-45, -90              ], "Pool CCW");
+      private static const sGestureStandard_Triangle1       :Object = NewGestureStandard (kGestureName_Triangle       , true , [120, 120        ], [120, 240              ], "triangle CW 1");
+      private static const sGestureStandard_Triangle1N      :Object = NewGestureStandard (kGestureName_Triangle       , false, [-120, -120      ], [-120, -240            ], "triangle CCW 1");
+      private static const sGestureStandard_Triangle2       :Object = NewGestureStandard (kGestureName_Triangle       , true , [116, 90         ], [146, 206              ], "triangle CW 2");
+      private static const sGestureStandard_Triangle2N      :Object = NewGestureStandard (kGestureName_Triangle       , false, [-116, -90       ], [-146, -206            ], "triangle CCW 2");
+      private static const sGestureStandard_Triangle3       :Object = NewGestureStandard (kGestureName_Triangle       , true , [90, 116         ], [90, 206               ], "triangle CW 3");
+      private static const sGestureStandard_Triangle3N      :Object = NewGestureStandard (kGestureName_Triangle       , false, [-90, -116       ], [-90, -206             ], "triangle CCW 3");
+      private static const sGestureStandard_Circle1         :Object = NewGestureStandard (kGestureName_Circle         , true , [75              ], [75, 150, 225, 300     ], "circle CW 1");
+      private static const sGestureStandard_Circle1N        :Object = NewGestureStandard (kGestureName_Circle         , false, [-75             ], [-75, -150, -225, -300 ], "circle CCW 1");
+      private static const sGestureStandard_Circle2         :Object = NewGestureStandard (kGestureName_Circle         , true , [100             ], [100, 200, 300         ], "circle CW 2");
+      private static const sGestureStandard_Circle2N        :Object = NewGestureStandard (kGestureName_Circle         , false, [-100            ], [-100, -200, -300      ], "circle CCW 2");
+      private static const sGestureStandard_FivePointStar   :Object = NewGestureStandard (kGestureName_FivePointStar  , true , [144             ], [144, 288, 432, 576    ], "five-pointed star CW");
+      private static const sGestureStandard_FivePointStarN  :Object = NewGestureStandard (kGestureName_FivePointStar  , false, [-144            ], [-144, -288, -432, -576], "five-pointed star CCW");
 
       private static var sThinStandrards:Array = [
          sGestureStandard_Line1,
@@ -875,7 +891,7 @@ trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end 
          
          for each (var standard:Object in standardGestures)
          {
-            var diffFunc:Function = standard.mUseTrancDiff ? AngleDiffWithTranc : AngleDiff;
+            var diffFunc:Function = standard.mUseTrancDiff ? AngleAbsDiffWithTranc : AngleAbsDiff;
          
             var deltaError:Number = ComputeGestureDataError (standard.mDeltaAngles, deltaAngles, diffFunc);
             var accError:Number   = ComputeGestureDataError (standard.mAccAngles, accAngles, diffFunc);
@@ -890,11 +906,23 @@ trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end 
 //trace ("Error to standard '" + standard.mType + "'(" + standard.mInfo + "): delta error: " + deltaError + ", accError: " + accError + ", sumError: " + sumError);
          }
 //trace ("********** the best type is: " + bestType);
+
+/*
+var ZeroRotation_MirrorZigzag:Array = [180, 90, 180];
+if (bestType == kGestureName_MirrorZigzag)
+{
+trace ("absSegmentAngles = " + absSegmentAngles);
+trace ("deltaAngles = " + deltaAngles);
+var gestureAngle:Number = ComputeGestureDataError (ZeroRotation_MirrorZigzag, absSegmentAngles, AngleAbsDiffWithTranc);
+trace ("gestureAngle = " + gestureAngle);
+}
+*/
          
          return NewAnalyzeResult (bestType, 0, "fitted with standard", bestTypeIsCW); // angle is temp
       }
       
-      private static var mErrorsTable:Array = null;
+      private static var mAbsErrorsTable:Array = null; // static, so parrallel is not supported now
+      
       private function ComputeGestureDataError (standardData:Array, realData:Array, CostFunc:Function):Number
       {
          if (standardData == null || realData == null || standardData.length == 0 || realData.length == 0)
@@ -906,36 +934,36 @@ trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end 
          var numRows:int = numStandardValues + 1;
          var numCols:int = numRealValues + 1;
          var tableLength:int = numRows * numCols;
-         if (mErrorsTable == null || mErrorsTable.length < tableLength)
-            mErrorsTable = new Array (tableLength);
+         if (mAbsErrorsTable == null || mAbsErrorsTable.length < tableLength)
+            mAbsErrorsTable = new Array (tableLength);
 
          var row:int;
          var col:int;
          for (var i:int = 0; i < tableLength; ++ i)
-            mErrorsTable [i] = 0.0;
+            mAbsErrorsTable [i] = 0.0;
          for (col = 1; col < numCols; ++ col)
-            mErrorsTable [col] = 0x7FFFFFFF;
+            mAbsErrorsTable [col] = 0x7FFFFFFF;
          for (row = 1; row < numRows; ++ row)
-            mErrorsTable [row * numCols] = 0x7FFFFFFF;
+            mAbsErrorsTable [row * numCols] = 0x7FFFFFFF;
 
          // levensthein
          
-         var error:int;
+         var absError:int;
          i = numCols + 1;
          for (row = 0; row < numStandardValues; ++ row, ++ i)
          {
             for (col = 0; col < numRealValues; ++ col, ++ i)
             {
-               error = Math.min (mErrorsTable [i - 1], mErrorsTable [i - numCols]);
-               error = Math.min (mErrorsTable [i - 1 - numCols], error);
-               mErrorsTable [i] = error + CostFunc (standardData [row], realData [col]);
+               absError = Math.min (mAbsErrorsTable [i - 1], mAbsErrorsTable [i - numCols]);
+               absError = Math.min (mAbsErrorsTable [i - 1 - numCols], absError);
+               mAbsErrorsTable [i] = absError + CostFunc (standardData [row], realData [col]);
             }
          }
          
-         return mErrorsTable [tableLength - 1] / numRealValues;
+         return mAbsErrorsTable [tableLength - 1] / numRealValues;
       }
       
-      private static function AngleDiffWithTranc (standardValue:Number, realValue:Number):Number
+      private static function AngleAbsDiffWithTranc (standardValue:Number, realValue:Number):Number
       {
          var diff:Number = Math.abs (realValue - standardValue);
          if (diff > 5000) // ? why? forget. Maybe a mistake.
@@ -950,11 +978,16 @@ trace (segment.mIndex + "> start index: " + segment.mStartPoint.mIndex + ", end 
          return diff;
       }
       
-      private static function AngleDiff (standardValue:Number, realValue:Number):Number
+      private static function AngleAbsDiff (standardValue:Number, realValue:Number):Number
       {
          var diff:Number = Math.abs (realValue - standardValue);
          
          return diff;
+      }
+      
+      private static function AngleDiff (standardValue:Number, realValue:Number):Number
+      {
+         return realValue - standardValue;
       }
    }
 }

@@ -262,7 +262,7 @@ package
                }
             }
             
-            SetText (result.mIsClockWise ? "CW" : "CCW");
+            SetText ((result.mIsClockWise ? "CW" : "CCW") + ", angle: " + result.mGestureAngle.toFixed (0));
             SetRecognizeResult (resultBitmap, result.mGestureAngle);
          }
          
