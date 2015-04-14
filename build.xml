@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project name="GestureStudyProject" basedir="." default="app">
    
-   <condition property="file.local.settings" value="LocalSettings.properties.Windows" else="LocalSettings.properties.Linux">
+   <condition property="file.local.settings" value="local.properties.Windows" else="local.properties.Linux">
       <os family="windows" />
    </condition>
    <property file="${basedir}/${file.local.settings}" />
@@ -29,6 +29,7 @@
          <arg line="--target-player=10.0.0" />
          <arg line="-default-background-color 0xffffff"/>
          <arg line="-default-size 500 500" />
+         <arg line="-static-link-runtime-shared-libraries" />
          <arg line="-source-path=${path.src}" />
          <arg line="-output=${output.app}"/>
          
